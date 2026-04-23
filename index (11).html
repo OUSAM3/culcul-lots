@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>XAUUSD Lot Size Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8C97A;
+    --gold-dim: #7A6230;
+    --bg: #0D0D0D;
+    --surface: #161616;
+    --surface2: #1E1E1E;
+    --border: #2A2A2A;
+    --text: #F0EDE6;
+    --muted: #888;
+    --danger: #E05252;
+    --green: #52C99A;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 520px;
+  }
+
+  header {
+    margin-bottom: 2.5rem;
+    border-left: 3px solid var(--gold);
+    padding-left: 1rem;
+  }
+
+  header .pair {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+  }
+
+  header p {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .field {
+    margin-bottom: 1.25rem;
+  }
+
+  .field:last-child { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  input[type="number"],
+  select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 16px;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  input[type="number"]:focus,
+  select:focus {
+    border-color: var(--gold);
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button { opacity: 0.4; }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--gold-dim);
+    border-radius: 12px;
+    padding: 1.75rem 1.5rem;
+    margin-bottom: 1rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .result-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold-dim), var(--gold), var(--gold-dim));
+  }
+
+  .result-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+
+  .result-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 52px;
+    font-weight: 500;
+    color: var(--gold-light);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  .result-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+  }
+
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .stat-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .lot-table {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+
+  .lot-table-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 12px 16px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .lot-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+
+  .lot-row:last-child { border-bottom: none; }
+  .lot-row:hover { background: var(--surface2); }
+
+  .lot-row.active {
+    background: rgba(201, 168, 76, 0.08);
+    border-color: rgba(201, 168, 76, 0.2);
+  }
+
+  .lot-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .lot-size {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  .lot-risk {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .lot-risk.over { color: var(--danger); }
+  .lot-risk.exact { color: var(--gold); }
+  .lot-risk.under { color: var(--green); }
+
+  .badge {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: var(--gold-dim);
+    color: var(--gold-light);
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin-left: 6px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  footer {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.7;
+    padding: 0.5rem 0;
+  }
+
+  select option { background: #1E1E1E; color: #F0EDE6; }
+
+  @media (max-width: 400px) {
+    .result-value { font-size: 40px; }
+    .row2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="pair">XAU / USD</div>
+    <h1>Lot Size Calculator</h1>
+    <p>Enter your risk and stop loss to get the exact position size.</p>
+  </header>
+
+  <div class="card">
+    <div class="row2">
+      <div class="field">
+        <label>Risk Amount ($)</label>
+        <input type="number" id="risk" value="100" min="0.01" step="1" />
+      </div>
+      <div class="field">
+        <label>Stop Loss</label>
+        <input type="number" id="sl" value="50" min="0.1" step="0.1" />
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>SL Unit</label>
+        <select id="sltype">
+          <option value="pips">Pips (×$1.00)</option>
+          <option value="points">Points (×$0.10)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Account Currency</label>
+        <select id="currency">
+          <option value="1">USD</option>
+          <option value="0.92">EUR (≈0.92)</option>
+          <option value="0.79">GBP (≈0.79)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-card">
+    <div class="result-label">Lot size to trade</div>
+    <div class="result-value" id="out-lots">0.20</div>
+    <div class="result-sub" id="out-units">20,000 units &nbsp;·&nbsp; $10.00 / pip per lot</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Risk / pip</div>
+      <div class="stat-value" id="out-rpp">$2.00</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Total risk</div>
+      <div class="stat-value" id="out-risk">$100.00</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Pip value (lot)</div>
+      <div class="stat-value" id="out-pipval">$10.00</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">SL distance</div>
+      <div class="stat-value" id="out-sl">50 pips</div>
+    </div>
+  </div>
+
+  <div class="lot-table">
+    <div class="lot-table-title">Risk comparison by lot size</div>
+    <div class="lot-row" id="row-micro">
+      <span class="lot-name">Micro</span>
+      <span class="lot-size">0.01</span>
+      <span class="lot-risk" id="r-micro">—</span>
+    </div>
+    <div class="lot-row" id="row-mini">
+      <span class="lot-name">Mini</span>
+      <span class="lot-size">0.10</span>
+      <span class="lot-risk" id="r-mini">—</span>
+    </div>
+    <div class="lot-row" id="row-std">
+      <span class="lot-name">Standard</span>
+      <span class="lot-size">1.00</span>
+      <span class="lot-risk" id="r-std">—</span>
+    </div>
+  </div>
+
+  <footer>
+    XAUUSD · 1 standard lot = 100 oz · pip value ≈ $10/lot<br>
+    Results are approximate. Always verify with your broker.
+  </footer>
+
+</div>
+<script>
+  const $ = id => document.getElementById(id);
+
+  function calc() {
+    const risk     = parseFloat($('risk').value)    || 0;
+    const sl       = parseFloat($('sl').value)      || 0;
+    const sltype   = $('sltype').value;
+    const fx       = parseFloat($('currency').value) || 1;
+
+    if (risk <= 0 || sl <= 0) return;
+
+    const pipValPerLot = sltype === 'pips' ? 10 : 1;
+    const lots = (risk / fx) / (sl * pipValPerLot);
+    const rounded = Math.round(lots * 100) / 100;
+
+    $('out-lots').textContent  = rounded.toFixed(2);
+    $('out-units').textContent = Math.round(rounded * 100000).toLocaleString() + ' units · $' + pipValPerLot.toFixed(2) + ' / ' + (sltype === 'pips' ? 'pip' : 'point') + ' per lot';
+    $('out-rpp').textContent   = '$' + ((risk / fx) / sl).toFixed(2);
+    $('out-risk').textContent  = '$' + risk.toFixed(2);
+    $('out-pipval').textContent= '$' + pipValPerLot.toFixed(2);
+    $('out-sl').textContent    = sl + ' ' + sltype;
+
+    const sizes = [0.01, 0.10, 1.00];
+    const ids   = ['micro','mini','std'];
+    sizes.forEach((s, i) => {
+      const r = Math.round(s * sl * pipValPerLot * fx * 100) / 100;
+      const el = $('r-' + ids[i]);
+      el.textContent = '$' + r.toFixed(2);
+      const row = $('row-' + ids[i]);
+      row.classList.remove('active');
+      el.className = 'lot-risk';
+      if (r > risk) el.classList.add('over');
+      else if (Math.abs(r - risk) < 0.01) { el.classList.add('exact'); row.classList.add('active'); }
+      else el.classList.add('under');
+    });
+
+    const closest = sizes.reduce((a, b) => {
+      const ra = Math.abs((a * sl * pipValPerLot) - risk / fx);
+      const rb = Math.abs((b * sl * pipValPerLot) - risk / fx);
+      return ra < rb ? a : b;
+    });
+    const closestId = ['micro','mini','std'][sizes.indexOf(closest)];
+    $('row-' + closestId).classList.add('active');
+  }
+
+  ['risk','sl','sltype','currency'].forEach(id => $( id).addEventListener('input', calc));
+  calc();
+</script>
+</body>
+</html>
